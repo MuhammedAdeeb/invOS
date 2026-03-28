@@ -87,4 +87,4 @@ app.delete('/api/products/:id', (req, res) => {
   });
 });
 
-app.listen(3000, () => console.log('API running at http://localhost:3000'));
+app.listen(3000, () => console.log('API running at https://invos-ihj2.onrender.com/api3000'));
