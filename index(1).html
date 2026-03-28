@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>InvOSS — Inventory Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════
+   ROOT TOKENS
+═══════════════════════════════════════════ */
+:root {
+  --bg:           #080c10;
+  --surface:      #0d1117;
+  --surface2:     #131a24;
+  --surface3:     #1a2535;
+  --border:       #1f2d3d;
+  --border2:      #2a3f55;
+  --accent:       #00d4ff;
+  --accent2:      #0088cc;
+  --gold:         #f0c040;
+  --green:        #00e676;
+  --red:          #ff3b5c;
+  --orange:       #ff7043;
+  --text:         #e2eaf4;
+  --muted:        #6a8095;
+  --muted2:       #3d5166;
+  --font-head:    'Syne', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+  --font-code:    'Space Mono', monospace;
+  --radius:       10px;
+  --radius-lg:    16px;
+  --shadow:       0 8px 32px rgba(0,0,0,.5);
+  --glow:         0 0 20px rgba(0,212,255,.15);
+  --glow-green:   0 0 20px rgba(0,230,118,.2);
+  --glow-red:     0 0 20px rgba(255,59,92,.2);
+}
+
+/* ═══════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-mono);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ═══════════════════════════════════════════
+   ANIMATED BG GRID
+═══════════════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,212,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,212,255,.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════ */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ═══════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════ */
+.app { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+/* ──── SIDEBAR ──── */
+.sidebar {
+  width: 260px; min-height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
+  overflow: hidden;
+}
+.sidebar-brand {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.brand-icon {
+  width: 40px; height: 40px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 12px;
+  box-shadow: 0 0 24px rgba(0,212,255,.4);
+  font-size: 18px;
+}
+.brand-name {
+  font-family: var(--font-head);
+  font-weight: 800; font-size: 20px;
+  color: var(--accent);
+  letter-spacing: 2px;
+}
+.brand-sub {
+  font-size: 10px; color: var(--muted);
+  letter-spacing: 1.5px; text-transform: uppercase;
+  margin-top: 2px;
+}
+.nav-section {
+  padding: 16px 12px 8px;
+  font-size: 9px; color: var(--muted2);
+  letter-spacing: 2px; text-transform: uppercase;
+  font-family: var(--font-code);
+}
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 8px;
+  margin: 2px 8px;
+  font-size: 13px; font-weight: 400;
+  color: var(--muted);
+  transition: all .2s;
+  position: relative;
+  overflow: hidden;
+}
+.nav-item::before {
+  content: '';
+  position: absolute; left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 0;
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+  transition: height .2s;
+}
+.nav-item:hover { color: var(--text); background: var(--surface2); }
+.nav-item.active { color: var(--accent); background: rgba(0,212,255,.08); }
+.nav-item.active::before { height: 60%; }
+.nav-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--red);
+  color: #fff;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px; text-align: center;
+}
+.sidebar-footer {
+  margin-top: auto;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--muted2);
+  font-family: var(--font-code);
+}
+.db-status {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 6px;
+}
+.db-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity: 1; }
+  50%      { opacity: .4; }
+}
+
+/* ──── MAIN ──── */
+.main {
+  flex: 1;
+  padding: 32px 36px;
+  overflow-y: auto;
+  max-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════════ */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 32px;
+}
+.page-title {
+  font-family: var(--font-head);
+  font-size: 26px; font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.page-title span { color: var(--accent); }
+.topbar-actions { display: flex; align-items: center; gap: 12px; }
+.search-bar {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  transition: border-color .2s;
+}
+.search-bar:focus-within { border-color: var(--accent); }
+.search-bar input {
+  background: none; border: none; outline: none;
+  color: var(--text);
+  font-family: var(--font-mono); font-size: 13px;
+  width: 220px;
+}
+.search-bar input::placeholder { color: var(--muted2); }
+
+/* ═══════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+  cursor: pointer; border: none;
+  transition: all .2s;
+  letter-spacing: .5px;
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--bg);
+  box-shadow: 0 0 16px rgba(0,212,255,.3);
+}
+.btn-primary:hover {
+  background: #33deff;
+  box-shadow: 0 0 24px rgba(0,212,255,.5);
+  transform: translateY(-1px);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--border2); }
+.btn-danger {
+  background: rgba(255,59,92,.15);
+  color: var(--red);
+  border: 1px solid rgba(255,59,92,.3);
+}
+.btn-danger:hover { background: rgba(255,59,92,.25); }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+
+/* ═══════════════════════════════════════════
+   STAT CARDS
+═══════════════════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s, transform .2s;
+}
+.stat-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.stat-card.blue::before   { background: var(--accent); }
+.stat-card.green::before  { background: var(--green); }
+.stat-card.orange::before { background: var(--orange); }
+.stat-card.red::before    { background: var(--red); }
+.stat-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.stat-label {
+  font-size: 10px; text-transform: uppercase;
+  letter-spacing: 1.5px; color: var(--muted);
+  margin-bottom: 8px; font-family: var(--font-code);
+}
+.stat-value {
+  font-family: var(--font-head);
+  font-size: 36px; font-weight: 800; line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-card.blue   .stat-value { color: var(--accent); }
+.stat-card.green  .stat-value { color: var(--green); }
+.stat-card.orange .stat-value { color: var(--orange); }
+.stat-card.red    .stat-value { color: var(--red); }
+.stat-delta { font-size: 11px; color: var(--muted); }
+.stat-icon {
+  position: absolute; right: 18px; top: 18px;
+  font-size: 28px; opacity: .15;
+}
+
+/* ═══════════════════════════════════════════
+   TABLE
+═══════════════════════════════════════════ */
+.table-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.table-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.table-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; }
+.table-meta  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.table-wrap  { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead tr     { border-bottom: 1px solid var(--border); }
+thead th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 10px; text-transform: uppercase;
+  letter-spacing: 1.5px; color: var(--muted);
+  font-family: var(--font-code);
+  white-space: nowrap;
+  background: var(--surface2);
+}
+tbody tr {
+  border-bottom: 1px solid rgba(31,45,61,.5);
+  transition: background .15s;
+}
+tbody tr:hover    { background: var(--surface2); }
+tbody tr:last-child { border-bottom: none; }
+td {
+  padding: 12px 16px;
+  vertical-align: middle;
+  color: var(--text);
+}
+.td-mono { font-family: var(--font-code); font-size: 11px; color: var(--muted); }
+.td-name { font-weight: 600; }
+
+/* ═══════════════════════════════════════════
+   BADGES
+═══════════════════════════════════════════ */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 8px; border-radius: 20px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: .5px; text-transform: uppercase;
+  font-family: var(--font-code);
+}
+.badge-green  { background: rgba(0,230,118,.12);  color: var(--green);  border: 1px solid rgba(0,230,118,.25); }
+.badge-orange { background: rgba(255,112,67,.12);  color: var(--orange); border: 1px solid rgba(255,112,67,.25); }
+.badge-red    { background: rgba(255,59,92,.12);   color: var(--red);    border: 1px solid rgba(255,59,92,.25); }
+.badge-blue   { background: rgba(0,212,255,.10);   color: var(--accent); border: 1px solid rgba(0,212,255,.2); }
+.badge-muted  { background: var(--surface2);       color: var(--muted);  border: 1px solid var(--border); }
+.badge-dot    { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+/* ═══════════════════════════════════════════
+   STOCK PROGRESS BAR
+═══════════════════════════════════════════ */
+.stock-bar-wrap { display: flex; align-items: center; gap: 8px; min-width: 130px; }
+.stock-bar-bg {
+  flex: 1; height: 4px;
+  background: var(--surface3);
+  border-radius: 4px; overflow: hidden;
+}
+.stock-bar-fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
+.stock-val { font-size: 11px; color: var(--muted); font-family: var(--font-code); white-space: nowrap; }
+
+/* ═══════════════════════════════════════════
+   ALERT PANEL
+═══════════════════════════════════════════ */
+.alert-list { display: flex; flex-direction: column; gap: 0; }
+.alert-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+  animation: slide-in .3s ease both;
+}
+.alert-item:hover     { background: var(--surface2); }
+.alert-item:last-child { border-bottom: none; }
+.alert-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+.alert-icon.red    { background: rgba(255,59,92,.15); }
+.alert-icon.orange { background: rgba(255,112,67,.15); }
+.alert-icon.green  { background: rgba(0,230,118,.15); }
+.alert-body { flex: 1; }
+.alert-msg  { font-size: 12px; line-height: 1.5; }
+.alert-time { font-size: 10px; color: var(--muted); margin-top: 3px; font-family: var(--font-code); }
+.alert-unread {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent);
+  margin-top: 4px; flex-shrink: 0;
+  box-shadow: 0 0 8px var(--accent);
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ═══════════════════════════════════════════
+   SQL VIEWER
+═══════════════════════════════════════════ */
+.sql-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.sql-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.sql-tabs { display: flex; gap: 4px; }
+.sql-tab {
+  padding: 5px 12px;
+  font-size: 11px; font-family: var(--font-code);
+  color: var(--muted); cursor: pointer;
+  border-radius: 6px; transition: all .15s;
+}
+.sql-tab.active { background: var(--surface3); color: var(--accent); }
+.sql-code {
+  padding: 20px;
+  font-family: var(--font-code);
+  font-size: 12px; line-height: 1.8;
+  overflow-x: auto;
+  white-space: pre;
+  color: #cdd9e5;
+}
+
+/* SQL syntax highlight classes */
+.kw  { color: #569cd6; font-weight: 700; }
+.kw2 { color: #c586c0; }
+.str { color: #ce9178; }
+.cmt { color: #6a9955; font-style: italic; }
+.fn  { color: #dcdcaa; }
+.num { color: #b5cea8; }
+.tbl { color: #4ec9b0; }
+.col { color: #9cdcfe; }
+
+/* ═══════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  width: 520px; max-width: 95vw;
+  box-shadow: 0 24px 80px rgba(0,0,0,.6);
+  transform: translateY(20px) scale(.97);
+  transition: transform .25s;
+}
+.modal-overlay.open .modal { transform: none; }
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; }
+.modal-close {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: var(--surface2); border: none;
+  color: var(--muted); cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.modal-close:hover { background: var(--surface3); color: var(--text); }
+.modal-body { padding: 22px; }
+.modal-foot {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 16px 22px;
+  border-top: 1px solid var(--border);
+}
+
+/* ═══════════════════════════════════════════
+   FORMS
+═══════════════════════════════════════════ */
+.form-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-label {
+  font-size: 10px; text-transform: uppercase;
+  letter-spacing: 1.5px; color: var(--muted);
+  font-family: var(--font-code);
+}
+.form-input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: var(--font-mono); font-size: 12px;
+  outline: none; transition: border-color .2s;
+}
+.form-input:focus { border-color: var(--accent); }
+.form-input::placeholder { color: var(--muted2); }
+select.form-input option { background: var(--surface2); }
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+.toast-wrap {
+  position: fixed; bottom: 24px; right: 24px;
+  z-index: 200; display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  font-size: 12px;
+  box-shadow: var(--shadow);
+  animation: toast-in .25s ease both;
+  min-width: 260px;
+}
+.toast.success { border-left: 3px solid var(--green); }
+.toast.error   { border-left: 3px solid var(--red); }
+.toast.info    { border-left: 3px solid var(--accent); }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ═══════════════════════════════════════════
+   TWO-COL LAYOUT
+═══════════════════════════════════════════ */
+.two-col { display: grid; grid-template-columns: 1fr 380px; gap: 20px; margin-top: 20px; }
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.panel-title { font-family: var(--font-head); font-size: 14px; font-weight: 700; }
+.panel-tag   {
+  font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--muted2); font-family: var(--font-code);
+}
+
+/* ═══════════════════════════════════════════
+   SUPPLIER CARDS
+═══════════════════════════════════════════ */
+.supplier-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.supplier-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  transition: border-color .2s, transform .2s;
+}
+.supplier-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.sc-avatar {
+  width: 44px; height: 44px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; margin-bottom: 12px;
+  border: 1px solid var(--border);
+}
+.sc-name    { font-family: var(--font-head); font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.sc-contact { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+.sc-meta    { display: flex; flex-direction: column; gap: 4px; }
+.sc-row     { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+.sc-row span:first-child { color: var(--muted2); width: 14px; }
+.sc-footer  {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.sc-products-count { font-size: 11px; color: var(--muted); }
+
+/* ═══════════════════════════════════════════
+   PAGE SECTIONS
+═══════════════════════════════════════════ */
+.page-section        { display: none; }
+.page-section.active { display: block; }
+
+/* ═══════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════ */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+.fade-up                    { animation: fade-up .4s ease both; }
+.fade-up:nth-child(1)       { animation-delay: .05s; }
+.fade-up:nth-child(2)       { animation-delay: .10s; }
+.fade-up:nth-child(3)       { animation-delay: .15s; }
+.fade-up:nth-child(4)       { animation-delay: .20s; }
+
+/* ═══════════════════════════════════════════
+   ALERT BANNER (low stock warning bar)
+═══════════════════════════════════════════ */
+.alert-banner {
+  background: rgba(255,112,67,.06);
+  border: 1px solid rgba(255,112,67,.2);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.alert-banner-icon  { font-size: 18px; }
+.alert-banner-title { font-weight: 600; color: var(--orange); }
+.alert-banner-desc  { color: var(--muted); margin-top: 2px; }
+
+/* ═══════════════════════════════════════════
+   TRIGGER INFO BOX
+═══════════════════════════════════════════ */
+.trigger-info {
+  margin-top: 14px;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border-radius: var(--radius);
+  font-size: 11px;
+  color: var(--muted);
+}
+.trigger-info code { color: var(--accent); }
+
+/* ═══════════════════════════════════════════
+   PAGE SUBTITLE
+═══════════════════════════════════════════ */
+.page-subtitle {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.page-subtitle code {
+  font-family: var(--font-code);
+  color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media (max-width: 1200px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .two-col    { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .sidebar { width: 56px; }
+  .brand-name, .brand-sub, .nav-item span:not(.nav-icon) { display: none; }
+  .main { padding: 20px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ─────────── SIDEBAR ─────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">📦</div>
+      <div class="brand-name">InvOSS</div>
+      <div class="brand-sub">Inventory OS</div>
+    </div>
+
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)">
+      <span class="nav-icon">🏠</span><span>Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="showPage('products',this)">
+      <span class="nav-icon">📦</span><span>Products</span>
+    </div>
+    <div class="nav-item" onclick="showPage('suppliers',this)">
+      <span class="nav-icon">🏭</span><span>Suppliers</span>
+    </div>
+    <div class="nav-item" onclick="showPage('stock',this)">
+      <span class="nav-icon">📊</span><span>Stock</span>
+    </div>
+
+    <div class="nav-section">Views &amp; Triggers</div>
+    <div class="nav-item" onclick="showPage('lowstock',this)">
+      <span class="nav-icon">⚠️</span><span>Low Stock View</span>
+      <span class="nav-badge" id="lowCountBadge">0</span>
+    </div>
+    <div class="nav-item" onclick="showPage('alerts',this)">
+      <span class="nav-icon">🔔</span><span>Alerts</span>
+      <span class="nav-badge" id="alertBadge">0</span>
+    </div>
+    <div class="nav-item" onclick="showPage('sql',this)">
+      <span class="nav-icon">🗄️</span><span>SQL Schema</span>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="db-status"><div class="db-dot"></div>localStorage</div>
+      <div id="dbStatusText">inventory_db · loading…</div>
+    </div>
+  </aside>
+
+  <!-- ─────────── MAIN ─────────── -->
+  <main class="main">
+
+    <!-- ════ DASHBOARD ════ -->
+    <section class="page-section active" id="page-dashboard">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Dashboard <span>Overview</span></div>
+          <div class="page-subtitle">Inventory Management System · Local Storage</div>
+        </div>
+        <div class="topbar-actions">
+          <div class="search-bar">
+            <span style="color:var(--muted)">🔍</span>
+            <input type="text" placeholder="Search products, SKU, supplier…" id="globalSearch"/>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('addProduct')">＋ Add Product</button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card blue fade-up">
+          <div class="stat-icon">📦</div>
+          <div class="stat-label">Total Products</div>
+          <div class="stat-value" id="totalCount">—</div>
+          <div class="stat-delta">Across all categories</div>
+        </div>
+        <div class="stat-card green fade-up">
+          <div class="stat-icon">✅</div>
+          <div class="stat-label">In Stock</div>
+          <div class="stat-value" id="inStockCount">—</div>
+          <div class="stat-delta">Above reorder level</div>
+        </div>
+        <div class="stat-card orange fade-up">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-label">Low Stock</div>
+          <div class="stat-value" id="lowStockCount">—</div>
+          <div class="stat-delta">Need reorder soon</div>
+        </div>
+        <div class="stat-card red fade-up">
+          <div class="stat-icon">🚫</div>
+          <div class="stat-label">Out of Stock</div>
+          <div class="stat-value" id="outStockCount">—</div>
+          <div class="stat-delta">Immediate action needed</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="table-card fade-up">
+          <div class="table-header">
+            <div>
+              <div class="table-title">Product Inventory</div>
+              <div class="table-meta">JOIN: products ⟕ suppliers ⟕ stock</div>
+            </div>
+            <select class="form-input" style="font-size:11px;padding:5px 10px;width:auto;" onchange="filterCategory(this.value)">
+              <option value="">All Categories</option>
+              <option>Peripherals</option>
+              <option>Accessories</option>
+              <option>Displays</option>
+              <option>Audio</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th><th>SKU</th><th>Category</th>
+                  <th>Supplier</th><th>Stock</th><th>Status</th>
+                  <th>Price</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="productsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel fade-up">
+          <div class="panel-head">
+            <div class="panel-title">🔔 Stock Alerts</div>
+            <div class="panel-tag">TRIGGER OUTPUT</div>
+          </div>
+          <div class="alert-list" id="alertList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ PRODUCTS ════ -->
+    <section class="page-section" id="page-products">
+      <div class="topbar">
+        <div><div class="page-title">Products <span>Catalog</span></div></div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" onclick="openModal('addProduct')">＋ Add Product</button>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div>
+            <div class="table-title">All Products</div>
+            <div class="table-meta">Full catalog — vw_supplier_products JOIN view</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Product</th><th>SKU</th><th>Category</th>
+                <th>Supplier</th><th>Unit Price</th><th>Reorder Lvl</th>
+                <th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="productsFullBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ SUPPLIERS ════ -->
+    <section class="page-section" id="page-suppliers">
+      <div class="topbar">
+        <div><div class="page-title">Suppliers <span>Directory</span></div></div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" onclick="openModal('addSupplier')">＋ Add Supplier</button>
+        </div>
+      </div>
+      <div class="supplier-grid" id="suppliersGrid"></div>
+    </section>
+
+    <!-- ════ STOCK ════ -->
+    <section class="page-section" id="page-stock">
+      <div class="topbar">
+        <div><div class="page-title">Stock <span>Management</span></div></div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" onclick="openModal('adjustStock')">↕ Adjust Stock</button>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div>
+            <div class="table-title">Stock Levels</div>
+            <div class="table-meta">Live quantities by warehouse location</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th><th>SKU</th><th>Location</th><th>Quantity</th>
+                <th>Reorder Lvl</th><th>Status</th><th>Last Restocked</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="stockBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ LOW STOCK VIEW ════ -->
+    <section class="page-section" id="page-lowstock">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Low Stock <span>VIEW</span></div>
+          <div class="page-subtitle">MySQL VIEW: <code>vw_low_stock</code></div>
+        </div>
+      </div>
+      <div class="alert-banner">
+        <span class="alert-banner-icon">⚠️</span>
+        <div>
+          <div class="alert-banner-title">Low Stock Alert — VIEW Active</div>
+          <div class="alert-banner-desc">Products below their reorder threshold. Contact suppliers immediately to avoid stockouts.</div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div>
+            <div class="table-title">vw_low_stock Results</div>
+            <div class="table-meta">Auto-filtered: quantity ≤ reorder_level</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th><th>SKU</th><th>Category</th><th>Current Stock</th>
+                <th>Reorder Lvl</th><th>Units Needed</th><th>Supplier</th><th>Alert Level</th>
+              </tr>
+            </thead>
+            <tbody id="lowStockBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ ALERTS ════ -->
+    <section class="page-section" id="page-alerts">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Stock <span>Alerts</span></div>
+          <div class="page-subtitle">TRIGGER: <code>trg_stock_after_update</code></div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-ghost btn-sm" onclick="markAllRead()">✓ Mark All Read</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearAlerts()">🗑 Clear</button>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="panel-head">
+          <div class="panel-title">Trigger-Generated Alerts</div>
+          <div class="panel-tag">TRIGGER OUTPUT → stock_alerts TABLE</div>
+        </div>
+        <div class="alert-list" id="alertListFull"></div>
+      </div>
+    </section>
+
+    <!-- ════ SQL SCHEMA ════ -->
+    <section class="page-section" id="page-sql">
+      <div class="topbar">
+        <div><div class="page-title">SQL <span>Schema</span></div></div>
+      </div>
+      <div class="sql-panel">
+        <div class="sql-panel-header">
+          <div class="sql-tabs">
+            <div class="sql-tab active" onclick="showSqlTab('tables',this)">Tables</div>
+            <div class="sql-tab" onclick="showSqlTab('join',this)">JOIN</div>
+            <div class="sql-tab" onclick="showSqlTab('view',this)">VIEW</div>
+            <div class="sql-tab" onclick="showSqlTab('trigger',this)">TRIGGER</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="copySql()">📋 Copy</button>
+        </div>
+        <div class="sql-code" id="sqlDisplay"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ─────────── MODALS ─────────── -->
+<div class="modal-overlay" id="modal-addProduct">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Add New Product</div>
+      <button class="modal-close" onclick="closeModal('addProduct')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Product Name</label>
+          <input class="form-input" type="text" placeholder="e.g. USB-C Docking Station" id="inp-pname"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">SKU</label>
+          <input class="form-input" type="text" placeholder="e.g. USB-DCK-009" id="inp-sku"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-input" id="inp-cat">
+            <option>Peripherals</option>
+            <option>Accessories</option>
+            <option>Displays</option>
+            <option>Audio</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unit Price ($)</label>
+          <input class="form-input" type="number" placeholder="0.00" id="inp-price"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reorder Level</label>
+          <input class="form-input" type="number" placeholder="10" value="10" id="inp-reorder"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Initial Stock</label>
+          <input class="form-input" type="number" placeholder="0" id="inp-stock"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Supplier</label>
+          <select class="form-input" id="inp-supplier"></select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Description</label>
+          <input class="form-input" type="text" placeholder="Brief product description" id="inp-desc"/>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('addProduct')">Cancel</button>
+      <button class="btn btn-primary" onclick="addProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-addSupplier">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Add New Supplier</div>
+      <button class="modal-close" onclick="closeModal('addSupplier')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Company Name</label>
+          <input class="form-input" type="text" placeholder="Supplier company name" id="inp-sname"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact Person</label>
+          <input class="form-input" type="text" placeholder="Full name" id="inp-sperson"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" placeholder="contact@supplier.com" id="inp-semail"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input class="form-input" type="text" placeholder="+1-555-0000" id="inp-sphone"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Country</label>
+          <input class="form-input" type="text" placeholder="USA" id="inp-scountry"/>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('addSupplier')">Cancel</button>
+      <button class="btn btn-primary" onclick="addSupplier()">Save Supplier</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-adjustStock">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Adjust Stock Quantity</div>
+      <button class="modal-close" onclick="closeModal('adjustStock')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Product</label>
+          <select class="form-input" id="inp-adj-product"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Operation</label>
+          <select class="form-input" id="inp-adj-op">
+            <option value="set">Set to value</option>
+            <option value="add">Add quantity</option>
+            <option value="sub">Subtract quantity</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quantity</label>
+          <input class="form-input" type="number" placeholder="0" min="0" id="inp-adj-qty"/>
+        </div>
+      </div>
+      <div class="trigger-info">
+        ⚡ Updating stock fires <code>trg_stock_after_update</code> and logs to <code>stock_alerts</code>.
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('adjustStock')">Cancel</button>
+      <button class="btn btn-primary" onclick="adjustStock()">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────── TOAST ─────────── -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ═══════════════════════════════════════════
+   STORAGE KEYS
+═══════════════════════════════════════════ */
+const KEYS = { suppliers: 'invoss_suppliers', products: 'invoss_products', alerts: 'invoss_alerts', nextId: 'invoss_nextid' };
+
+/* ═══════════════════════════════════════════
+   IN-MEMORY STATE
+═══════════════════════════════════════════ */
+let suppliers = [];
+let products  = [];
+let alerts    = [];
+
+/* ═══════════════════════════════════════════
+   PERSISTENCE — localStorage helpers
+═══════════════════════════════════════════ */
+const store = {
+  get: k => { try { return JSON.parse(localStorage.getItem(k)) || null; } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) { console.error('Storage error', e); } },
+};
+
+function nextId() {
+  const ids = store.get(KEYS.nextId) || { supplier: 10, product: 10, alert: 1 };
+  return ids;
+}
+function bumpId(type) {
+  const ids = nextId();
+  const val = ids[type]++;
+  store.set(KEYS.nextId, ids);
+  return val;
+}
+
+function saveAll() {
+  store.set(KEYS.suppliers, suppliers);
+  store.set(KEYS.products,  products);
+  store.set(KEYS.alerts,    alerts);
+}
+
+/* ═══════════════════════════════════════════
+   SEED DATA — only runs once on first visit
+═══════════════════════════════════════════ */
+function seedData() {
+  suppliers = [
+    { supplier_id: 1, supplier_name: 'TechCore Supplies', contact_person: 'Alice Nguyen',   email: 'alice@techcore.io',    phone: '+1-415-555-0101', country: 'USA',    status: 'active'   },
+    { supplier_id: 2, supplier_name: 'Nordic Components',  contact_person: 'Lars Eriksson',  email: 'lars@nordiccomp.se',   phone: '+46-8-555-0202',  country: 'Sweden', status: 'active'   },
+    { supplier_id: 3, supplier_name: 'ShenZhen Direct',    contact_person: 'Wei Zhang',      email: 'wei@szhdirect.cn',     phone: '+86-755-5550303', country: 'China',  status: 'active'   },
+    { supplier_id: 4, supplier_name: 'BritParts Ltd',      contact_person: 'James Holloway', email: 'james@britparts.co.uk',phone: '+44-20-5550404',  country: 'UK',     status: 'inactive' },
+  ];
+
+  products = [
+    { product_id: 1,  supplier_id: 1, product_name: 'Mechanical Keyboard Pro',   sku: 'KB-MECH-001',  category: 'Peripherals',  unit_price: 149.99, reorder_level: 15, description: 'TKL mechanical keyboard, Cherry MX switches',    current_stock: 42,  warehouse_loc: 'Rack A-1', last_restocked: '2025-03-10' },
+    { product_id: 2,  supplier_id: 1, product_name: 'Ergonomic Mouse X500',       sku: 'MS-ERGO-002',  category: 'Peripherals',  unit_price:  79.99, reorder_level: 20, description: 'Wireless ergonomic mouse, 6000 DPI',             current_stock: 18,  warehouse_loc: 'Rack A-2', last_restocked: '2025-03-12' },
+    { product_id: 3,  supplier_id: 2, product_name: 'USB-C Docking Station',      sku: 'USB-DCK-003',  category: 'Accessories',  unit_price: 199.99, reorder_level: 10, description: '12-in-1 USB-C hub with 4K HDMI output',         current_stock:  8,  warehouse_loc: 'Rack B-1', last_restocked: '2025-02-28' },
+    { product_id: 4,  supplier_id: 3, product_name: '4K Monitor 27"',             sku: 'MON-4K-004',   category: 'Displays',     unit_price: 399.99, reorder_level:  5, description: '27" IPS panel, 144Hz refresh rate',            current_stock: 12,  warehouse_loc: 'Rack C-1', last_restocked: '2025-03-01' },
+    { product_id: 5,  supplier_id: 2, product_name: 'Noise-Cancelling Headset',   sku: 'AUD-NC-005',   category: 'Audio',        unit_price: 249.99, reorder_level: 10, description: 'Over-ear ANC headset, 30hr battery',           current_stock:  5,  warehouse_loc: 'Rack D-1', last_restocked: '2025-02-15' },
+    { product_id: 6,  supplier_id: 1, product_name: 'Webcam 1080p AutoFocus',     sku: 'CAM-1080-006', category: 'Peripherals',  unit_price:  89.99, reorder_level: 12, description: 'Full HD webcam with auto-focus and ring light',  current_stock:  0,  warehouse_loc: 'Rack A-3', last_restocked: '2025-01-20' },
+    { product_id: 7,  supplier_id: 3, product_name: 'Laptop Stand Aluminium',     sku: 'STD-ALU-007',  category: 'Accessories',  unit_price:  49.99, reorder_level: 25, description: 'Adjustable aluminium laptop stand',             current_stock: 67,  warehouse_loc: 'Rack B-2', last_restocked: '2025-03-15' },
+    { product_id: 8,  supplier_id: 4, product_name: 'USB-C Cable 2m Braided',     sku: 'CBL-UC2-008',  category: 'Accessories',  unit_price:  14.99, reorder_level: 50, description: '240W fast-charge braided USB-C cable',          current_stock: 112, warehouse_loc: 'Rack E-1', last_restocked: '2025-03-08' },
+    { product_id: 9,  supplier_id: 2, product_name: 'Desktop Speakers 2.0',       sku: 'AUD-SPK-009',  category: 'Audio',        unit_price: 129.99, reorder_level:  8, description: 'Studio-quality 2.0 desktop speakers 80W RMS',   current_stock:  3,  warehouse_loc: 'Rack D-2', last_restocked: '2025-02-10' },
+    { product_id: 10, supplier_id: 1, product_name: 'Wireless Numpad',            sku: 'KB-NUM-010',   category: 'Peripherals',  unit_price:  34.99, reorder_level: 20, description: 'Bluetooth slim wireless numpad',                current_stock: 29,  warehouse_loc: 'Rack A-4', last_restocked: '2025-03-05' },
+    { product_id: 11, supplier_id: 3, product_name: 'HDMI 2.1 Cable 3m',          sku: 'CBL-HD3-011',  category: 'Accessories',  unit_price:  24.99, reorder_level: 30, description: '48Gbps HDMI 2.1 cable supports 8K@60Hz',        current_stock:  9,  warehouse_loc: 'Rack E-2', last_restocked: '2025-02-22' },
+    { product_id: 12, supplier_id: 4, product_name: 'USB Microphone Condenser',   sku: 'AUD-MIC-012',  category: 'Audio',        unit_price: 119.99, reorder_level: 10, description: 'Cardioid condenser USB mic for streaming',      current_stock:  0,  warehouse_loc: 'Rack D-3', last_restocked: '2025-01-30' },
+  ];
+
+  // Seed some initial alerts
+  alerts = [
+    { alert_id: 1, product_id: 6,  product_name: 'Webcam 1080p AutoFocus',   alert_type: 'OUT_OF_STOCK', old_quantity: 2,  new_quantity: 0, message: 'URGENT: Webcam 1080p AutoFocus is OUT OF STOCK',      triggered_at: new Date(Date.now() - 86400000*2).toISOString(), is_read: false },
+    { alert_id: 2, product_id: 12, product_name: 'USB Microphone Condenser', alert_type: 'OUT_OF_STOCK', old_quantity: 1,  new_quantity: 0, message: 'URGENT: USB Microphone Condenser is OUT OF STOCK',     triggered_at: new Date(Date.now() - 86400000*3).toISOString(), is_read: false },
+    { alert_id: 3, product_id: 5,  product_name: 'Noise-Cancelling Headset', alert_type: 'LOW_STOCK',    old_quantity: 15, new_quantity: 5, message: 'WARNING: Noise-Cancelling Headset below reorder level 10', triggered_at: new Date(Date.now() - 86400000).toISOString(),   is_read: false },
+    { alert_id: 4, product_id: 9,  product_name: 'Desktop Speakers 2.0',    alert_type: 'LOW_STOCK',    old_quantity: 10, new_quantity: 3, message: 'WARNING: Desktop Speakers 2.0 below reorder level 8',    triggered_at: new Date(Date.now() - 43200000).toISOString(),   is_read: false },
+    { alert_id: 5, product_id: 8,  product_name: 'USB-C Cable 2m Braided',   alert_type: 'RESTOCKED',    old_quantity: 20, new_quantity:112,message: 'INFO: USB-C Cable 2m Braided restocked to 112 units',    triggered_at: new Date(Date.now() - 21600000).toISOString(),   is_read: true  },
+  ];
+
+  store.set(KEYS.nextId, { supplier: 5, product: 13, alert: 6 });
+  saveAll();
+}
+
+/* ═══════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════ */
+function loadAll() {
+  const storedSuppliers = store.get(KEYS.suppliers);
+  if (!storedSuppliers) {
+    seedData();
+  } else {
+    suppliers = storedSuppliers;
+    products  = store.get(KEYS.products) || [];
+    alerts    = store.get(KEYS.alerts)   || [];
+  }
+  setDbStatus('connected');
+  updateBadges();
+  renderProducts();
+  renderAlerts('alertList');
+}
+
+/* ═══════════════════════════════════════════
+   DB STATUS INDICATOR
+═══════════════════════════════════════════ */
+function setDbStatus(state) {
+  const dot  = document.querySelector('.db-dot');
+  const text = document.getElementById('dbStatusText');
+  const map = {
+    connected:  { bg: 'var(--green)',  shadow: '0 0 8px var(--green)',  label: 'inventory_db · connected' },
+    error:      { bg: 'var(--red)',    shadow: '0 0 8px var(--red)',    label: 'Storage · error' },
+    connecting: { bg: 'var(--orange)', shadow: '0 0 8px var(--orange)', label: 'Connecting…' },
+  };
+  const s = map[state] || map.connecting;
+  dot.style.background = s.bg;
+  dot.style.boxShadow  = s.shadow;
+  text.textContent     = s.label;
+}
+
+/* ═══════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════ */
+function getProduct(id)  { return products.find(p => p.product_id  === id) || {}; }
+function getSupplier(id) { return suppliers.find(s => s.supplier_id === id) || {}; }
+
+function stockStatus(qty, reorder) {
+  if (qty === 0)      return { label: 'Out of Stock', cls: 'badge-red' };
+  if (qty <= reorder) return { label: 'Low Stock',    cls: 'badge-orange' };
+  return                     { label: 'In Stock',     cls: 'badge-green' };
+}
+
+function stockBarColor(qty, reorder) {
+  if (qty === 0)      return 'var(--red)';
+  if (qty <= reorder) return 'var(--orange)';
+  return 'var(--green)';
+}
+
+function updateBadges() {
+  const unread = alerts.filter(a => !a.is_read).length;
+  const low    = products.filter(p => (p.current_stock || 0) > 0 && (p.current_stock || 0) <= p.reorder_level).length;
+  const out    = products.filter(p => (p.current_stock || 0) === 0).length;
+  const inStk  = products.filter(p => (p.current_stock || 0) > p.reorder_level).length;
+
+  document.getElementById('alertBadge').textContent    = unread;
+  document.getElementById('lowCountBadge').textContent = low + out;
+  document.getElementById('totalCount').textContent    = products.length;
+  document.getElementById('inStockCount').textContent  = inStk;
+  document.getElementById('lowStockCount').textContent = low;
+  document.getElementById('outStockCount').textContent = out;
+}
+
+/* ═══════════════════════════════════════════
+   RENDER — uses DocumentFragment for perf
+═══════════════════════════════════════════ */
+function rowHTML(p, mode = 'dashboard') {
+  const qty     = p.current_stock ?? 0;
+  const reorder = p.reorder_level ?? 10;
+  const ss      = stockStatus(qty, reorder);
+  const pct     = Math.min(100, (qty / (Math.max(qty, reorder) * 2 || 100)) * 100);
+  const sup     = getSupplier(p.supplier_id);
+  const sName   = p.supplier_name || sup.supplier_name || '—';
+  const barHTML = `<div class="stock-bar-wrap"><div class="stock-bar-bg"><div class="stock-bar-fill" style="width:${pct}%;background:${stockBarColor(qty, reorder)}"></div></div><span class="stock-val">${qty}</span></div>`;
+  const badgeHTML = `<span class="badge ${ss.cls}"><span class="badge-dot"></span>${ss.label}</span>`;
+
+  if (mode === 'dashboard') {
+    return `<tr>
+      <td><div class="td-name">${p.product_name}</div></td>
+      <td><span class="td-mono">${p.sku}</span></td>
+      <td><span class="badge badge-blue">${p.category || '—'}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${sName}</td>
+      <td>${barHTML}</td>
+      <td>${badgeHTML}</td>
+      <td style="font-family:var(--font-code);font-size:12px;">$${parseFloat(p.unit_price).toFixed(2)}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="editStockModal(${p.product_id})">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.product_id})">Del</button>
+      </td></tr>`;
+  }
+  if (mode === 'full') {
+    return `<tr>
+      <td class="td-mono">${p.product_id}</td>
+      <td><div class="td-name">${p.product_name}</div><div style="font-size:10px;color:var(--muted)">${p.description || ''}</div></td>
+      <td class="td-mono">${p.sku}</td>
+      <td><span class="badge badge-blue">${p.category || '—'}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${sName}</td>
+      <td style="font-family:var(--font-code);font-size:12px;">$${parseFloat(p.unit_price).toFixed(2)}</td>
+      <td style="font-family:var(--font-code);font-size:12px;">${reorder}</td>
+      <td>${badgeHTML}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="editStockModal(${p.product_id})">Stock</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.product_id})">Del</button>
+      </td></tr>`;
+  }
+  if (mode === 'stock') {
+    return `<tr>
+      <td><div class="td-name">${p.product_name}</div></td>
+      <td class="td-mono">${p.sku}</td>
+      <td style="font-size:12px;color:var(--muted)">${p.warehouse_loc || 'Main Warehouse'}</td>
+      <td>${barHTML}</td>
+      <td class="td-mono">${reorder}</td>
+      <td>${badgeHTML}</td>
+      <td class="td-mono">${p.last_restocked ? new Date(p.last_restocked).toLocaleDateString() : '—'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="editStockModal(${p.product_id})">Adjust</button></td></tr>`;
+  }
+  return '';
+}
+
+function setTbody(id, html) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html;
+}
+
+function renderProducts(filter = '', catFilter = '') {
+  const q = filter.toLowerCase();
+  const filtered = products.filter(p => {
+    const sup   = getSupplier(p.supplier_id);
+    const sName = p.supplier_name || sup.supplier_name || '';
+    const match    = !q || p.product_name.toLowerCase().includes(q)
+                       || p.sku.toLowerCase().includes(q)
+                       || sName.toLowerCase().includes(q);
+    const catMatch = !catFilter || p.category === catFilter;
+    return match && catMatch;
+  });
+  if (!filtered.length) {
+    setTbody('productsBody', `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted)">No products found</td></tr>`);
+    return;
+  }
+  setTbody('productsBody', filtered.map(p => rowHTML(p, 'dashboard')).join(''));
+}
+
+function renderProductsFull() {
+  setTbody('productsFullBody', products.map(p => rowHTML(p, 'full')).join('') ||
+    `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted)">No products found</td></tr>`);
+}
+
+function renderStock() {
+  setTbody('stockBody', products.map(p => rowHTML(p, 'stock')).join('') ||
+    `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted)">No stock data</td></tr>`);
+}
+
+function renderLowStock() {
+  const low = products.filter(p => (p.current_stock ?? 0) <= p.reorder_level);
+  if (!low.length) {
+    setTbody('lowStockBody', `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--green)">✓ All products above reorder level</td></tr>`);
+    return;
+  }
+  setTbody('lowStockBody', low.map(r => {
+    const qty     = r.current_stock ?? 0;
+    const reorder = r.reorder_level ?? 10;
+    const level   = qty === 0 ? 'OUT_OF_STOCK' : 'LOW_STOCK';
+    const sup     = getSupplier(r.supplier_id);
+    const sName   = r.supplier_name || sup.supplier_name || '—';
+    const sEmail  = sup.email || '';
+    return `<tr>
+      <td><div class="td-name">${r.product_name}</div></td>
+      <td class="td-mono">${r.sku}</td>
+      <td><span class="badge badge-blue">${r.category || '—'}</span></td>
+      <td><div class="stock-bar-wrap"><div class="stock-bar-bg"><div class="stock-bar-fill" style="width:${qty === 0 ? 0 : Math.round((qty / reorder) * 80)}%;background:${stockBarColor(qty, reorder)}"></div></div><span class="stock-val" style="color:${stockBarColor(qty, reorder)}">${qty}</span></div></td>
+      <td class="td-mono">${reorder}</td>
+      <td style="font-family:var(--font-code);font-size:12px;color:var(--red)">+${reorder - qty}</td>
+      <td style="font-size:12px;color:var(--muted)">${sName}<br><span style="font-size:10px;color:var(--muted2)">${sEmail}</span></td>
+      <td><span class="badge ${level === 'OUT_OF_STOCK' ? 'badge-red' : 'badge-orange'}"><span class="badge-dot"></span>${level}</span></td>
+    </tr>`;
+  }).join(''));
+}
+
+function renderSuppliers() {
+  const grid = document.getElementById('suppliersGrid');
+  if (!grid) return;
+  const flags  = { USA: '🇺🇸', UK: '🇬🇧', China: '🇨🇳', Sweden: '🇸🇪' };
+  const emojis = ['🏭', '🔧', '⚙️', '🛠️', '🏗️', '⚗️'];
+  grid.innerHTML = suppliers.map((s, i) => {
+    const count = products.filter(p => p.supplier_id === s.supplier_id).length;
+    return `<div class="supplier-card">
+      <div class="sc-avatar">${emojis[i % emojis.length]}</div>
+      <div class="sc-name">${s.supplier_name}</div>
+      <div class="sc-contact">${s.contact_person || ''}</div>
+      <div class="sc-meta">
+        <div class="sc-row"><span>✉️</span>${s.email}</div>
+        <div class="sc-row"><span>📞</span>${s.phone || '—'}</div>
+        <div class="sc-row"><span>🌍</span>${flags[s.country] || '🌐'} ${s.country || '—'}</div>
+      </div>
+      <div class="sc-footer">
+        <div class="sc-products-count">📦 ${count} product${count !== 1 ? 's' : ''}</div>
+        <span class="badge ${s.status === 'active' ? 'badge-green' : 'badge-red'}"><span class="badge-dot"></span>${s.status}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAlerts(target) {
+  const el = document.getElementById(target);
+  if (!el) return;
+  if (!alerts.length) {
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px;">No alerts — all stock levels healthy ✓</div>';
+    return;
+  }
+  const list = target === 'alertList' ? alerts.slice(0, 5) : alerts;
+  el.innerHTML = list.map(a => {
+    const pName = a.product_name || getProduct(a.product_id).product_name || `Product #${a.product_id}`;
+    const icon  = a.alert_type === 'OUT_OF_STOCK' ? '🚫' : a.alert_type === 'LOW_STOCK' ? '⚠️' : '✅';
+    const cls   = a.alert_type === 'OUT_OF_STOCK' ? 'red' : a.alert_type === 'LOW_STOCK' ? 'orange' : 'green';
+    const time  = a.triggered_at ? new Date(a.triggered_at).toLocaleString() : '—';
+    return `<div class="alert-item">
+      <div class="alert-icon ${cls}">${icon}</div>
+      <div class="alert-body">
+        <div class="alert-msg">${a.message}</div>
+        <div class="alert-time">${time} · ${pName}</div>
+      </div>
+      ${!a.is_read ? '<div class="alert-unread"></div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════
+   TRIGGER SIMULATION — fires on stock update
+   Mirrors MySQL trg_stock_after_update logic
+═══════════════════════════════════════════ */
+function triggerStockAlert(product, oldQty, newQty) {
+  const reorder = product.reorder_level ?? 10;
+  let alertType = null, message = '';
+
+  if (newQty === 0 && oldQty > 0) {
+    alertType = 'OUT_OF_STOCK';
+    message = `URGENT: ${product.product_name} is OUT OF STOCK`;
+  } else if (newQty <= reorder && oldQty > reorder) {
+    alertType = 'LOW_STOCK';
+    message = `WARNING: ${product.product_name} below reorder level ${reorder}`;
+  } else if (newQty > reorder && oldQty <= reorder) {
+    alertType = 'RESTOCKED';
+    message = `INFO: ${product.product_name} restocked to ${newQty} units`;
+  }
+
+  if (alertType) {
+    const id = bumpId('alert');
+    alerts.unshift({
+      alert_id:    id,
+      product_id:  product.product_id,
+      product_name: product.product_name,
+      alert_type:  alertType,
+      old_quantity: oldQty,
+      new_quantity: newQty,
+      message,
+      triggered_at: new Date().toISOString(),
+      is_read: false,
+    });
+    store.set(KEYS.alerts, alerts);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   PAGE NAVIGATION
+═══════════════════════════════════════════ */
+function showPage(name, el) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+
+  if (name === 'dashboard') { renderProducts(); renderAlerts('alertList'); }
+  if (name === 'products')  { renderProductsFull(); }
+  if (name === 'suppliers') { renderSuppliers(); }
+  if (name === 'stock')     { renderStock(); }
+  if (name === 'lowstock')  { renderLowStock(); }
+  if (name === 'alerts')    { renderAlerts('alertListFull'); }
+  if (name === 'sql')       { showSqlTab('tables'); }
+}
+
+/* ═══════════════════════════════════════════
+   MODALS
+═══════════════════════════════════════════ */
+function openModal(name) {
+  if (name === 'addProduct' || name === 'adjustStock') {
+    document.getElementById('inp-supplier').innerHTML =
+      suppliers.map(s => `<option value="${s.supplier_id}">${s.supplier_name}</option>`).join('');
+    document.getElementById('inp-adj-product').innerHTML =
+      products.map(p => `<option value="${p.product_id}">${p.product_name}</option>`).join('');
+  }
+  document.getElementById('modal-' + name).classList.add('open');
+}
+function closeModal(name) { document.getElementById('modal-' + name).classList.remove('open'); }
+
+function editStockModal(pid) {
+  document.getElementById('inp-adj-product').innerHTML =
+    products.map(p => `<option value="${p.product_id}" ${p.product_id === pid ? 'selected' : ''}>${p.product_name}</option>`).join('');
+  openModal('adjustStock');
+}
+
+/* ═══════════════════════════════════════════
+   CRUD — all wired to localStorage
+═══════════════════════════════════════════ */
+function addProduct() {
+  const name    = document.getElementById('inp-pname').value.trim();
+  const sku     = document.getElementById('inp-sku').value.trim();
+  const cat     = document.getElementById('inp-cat').value;
+  const price   = parseFloat(document.getElementById('inp-price').value)   || 0;
+  const reorder = parseInt(document.getElementById('inp-reorder').value)   || 10;
+  const qty     = parseInt(document.getElementById('inp-stock').value)     || 0;
+  const sid     = parseInt(document.getElementById('inp-supplier').value);
+  const desc    = document.getElementById('inp-desc').value.trim();
+
+  if (!name || !sku) { toast('Product name and SKU are required', 'error'); return; }
+  if (products.some(p => p.sku === sku)) { toast('SKU already exists', 'error'); return; }
+
+  const pid = bumpId('product');
+  const product = {
+    product_id:    pid,
+    supplier_id:   sid,
+    product_name:  name,
+    sku, category: cat,
+    unit_price:    price,
+    reorder_level: reorder,
+    description:   desc,
+    current_stock: qty,
+    warehouse_loc: 'Main Warehouse',
+    last_restocked: new Date().toISOString().slice(0, 10),
+  };
+  products.push(product);
+
+  // Simulate trigger on initial stock set
+  if (qty === 0) {
+    triggerStockAlert(product, -1, 0); // -1 old means "just created as out of stock"
+  } else if (qty <= reorder) {
+    triggerStockAlert(product, reorder + 1, qty);
+  }
+
+  saveAll();
+  closeModal('addProduct');
+  updateBadges();
+  renderProducts();
+  renderAlerts('alertList');
+  toast(`Product "${name}" added`, 'success');
+
+  // Clear form
+  ['inp-pname','inp-sku','inp-price','inp-stock','inp-desc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('inp-reorder').value = '10';
+}
+
+function deleteProduct(id) {
+  const p = getProduct(id);
+  if (!confirm(`Delete "${p.product_name}"? This cannot be undone.`)) return;
+  products = products.filter(p => p.product_id !== id);
+  saveAll();
+  updateBadges();
+  renderProducts();
+  toast(`Product "${p.product_name}" deleted`, 'info');
+}
+
+function addSupplier() {
+  const name    = document.getElementById('inp-sname').value.trim();
+  const contact = document.getElementById('inp-sperson').value.trim();
+  const email   = document.getElementById('inp-semail').value.trim();
+  const phone   = document.getElementById('inp-sphone').value.trim();
+  const country = document.getElementById('inp-scountry').value.trim();
+  if (!name || !email) { toast('Name and email are required', 'error'); return; }
+
+  const sid = bumpId('supplier');
+  suppliers.push({ supplier_id: sid, supplier_name: name, contact_person: contact, email, phone, country, status: 'active' });
+  saveAll();
+  closeModal('addSupplier');
+  renderSuppliers();
+  toast(`Supplier "${name}" added`, 'success');
+
+  ['inp-sname','inp-sperson','inp-semail','inp-sphone','inp-scountry'].forEach(id => document.getElementById(id).value = '');
+}
+
+function adjustStock() {
+  const pid    = parseInt(document.getElementById('inp-adj-product').value);
+  const op     = document.getElementById('inp-adj-op').value;
+  const qty    = parseInt(document.getElementById('inp-adj-qty').value) || 0;
+  const pIdx   = products.findIndex(p => p.product_id === pid);
+  if (pIdx === -1) { toast('Product not found', 'error'); return; }
+
+  const p      = products[pIdx];
+  const oldQty = p.current_stock ?? 0;
+  let newQty   = qty;
+  if (op === 'add') newQty = Math.max(0, oldQty + qty);
+  if (op === 'sub') newQty = Math.max(0, oldQty - qty);
+
+  products[pIdx] = { ...p, current_stock: newQty, last_restocked: new Date().toISOString().slice(0, 10) };
+
+  // Fire the trigger simulation
+  triggerStockAlert(products[pIdx], oldQty, newQty);
+
+  saveAll();
+  closeModal('adjustStock');
+  updateBadges();
+  renderProducts();
+  renderAlerts('alertList');
+  renderAlerts('alertListFull');
+  toast(`Stock updated: ${p.product_name} → ${newQty} units`, 'success');
+}
+
+/* ═══════════════════════════════════════════
+   ALERT ACTIONS
+═══════════════════════════════════════════ */
+function markAllRead() {
+  alerts = alerts.map(a => ({ ...a, is_read: true }));
+  store.set(KEYS.alerts, alerts);
+  renderAlerts('alertListFull');
+  updateBadges();
+  toast('All alerts marked as read', 'info');
+}
+
+function clearAlerts() {
+  if (!confirm('Clear all alerts?')) return;
+  alerts = [];
+  store.set(KEYS.alerts, alerts);
+  renderAlerts('alertList');
+  renderAlerts('alertListFull');
+  updateBadges();
+  toast('Alerts cleared', 'info');
+}
+
+/* ═══════════════════════════════════════════
+   SEARCH — debounced for perf
+═══════════════════════════════════════════ */
+let _searchTimer = null;
+function filterCategory(val) { renderProducts(document.getElementById('globalSearch').value, val); }
+document.getElementById('globalSearch').addEventListener('input', e => {
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(() => renderProducts(e.target.value), 120);
+});
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+function toast(msg, type = 'info') {
+  const w     = document.getElementById('toastWrap');
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  const el    = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  w.appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+/* ═══════════════════════════════════════════
+   CLOSE MODALS ON OVERLAY CLICK
+═══════════════════════════════════════════ */
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+/* ═══════════════════════════════════════════
+   SQL SCHEMA VIEWER
+═══════════════════════════════════════════ */
+const SQL_SNIPPETS = {
+tables: `<span class="cmt">-- ── TABLE: suppliers ───────────────────────────</span>
+<span class="kw">CREATE TABLE</span> <span class="tbl">suppliers</span> (
+    <span class="col">supplier_id</span>    <span class="kw2">INT</span>          <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>,
+    <span class="col">supplier_name</span>  <span class="kw2">VARCHAR</span>(<span class="num">150</span>) <span class="kw">NOT NULL</span>,
+    <span class="col">email</span>          <span class="kw2">VARCHAR</span>(<span class="num">120</span>) <span class="kw">UNIQUE NOT NULL</span>,
+    <span class="col">status</span>         <span class="kw2">ENUM</span>(<span class="str">'active'</span>,<span class="str">'inactive'</span>,<span class="str">'suspended'</span>) <span class="kw">DEFAULT</span> <span class="str">'active'</span>,
+    <span class="col">created_at</span>     <span class="kw2">TIMESTAMP</span>    <span class="kw">DEFAULT</span> <span class="fn">CURRENT_TIMESTAMP</span>
+);
+
+<span class="cmt">-- ── TABLE: products ─────────────────────────────</span>
+<span class="kw">CREATE TABLE</span> <span class="tbl">products</span> (
+    <span class="col">product_id</span>     <span class="kw2">INT</span>           <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>,
+    <span class="col">supplier_id</span>    <span class="kw2">INT</span>           <span class="kw">NOT NULL</span>,
+    <span class="col">product_name</span>   <span class="kw2">VARCHAR</span>(<span class="num">200</span>)  <span class="kw">NOT NULL</span>,
+    <span class="col">sku</span>            <span class="kw2">VARCHAR</span>(<span class="num">60</span>)   <span class="kw">UNIQUE NOT NULL</span>,
+    <span class="col">unit_price</span>     <span class="kw2">DECIMAL</span>(<span class="num">12</span>,<span class="num">2</span>) <span class="kw">NOT NULL</span>,
+    <span class="col">reorder_level</span>  <span class="kw2">INT</span>           <span class="kw">NOT NULL DEFAULT</span> <span class="num">10</span>,
+    <span class="kw">CONSTRAINT</span> <span class="fn">fk_product_supplier</span>
+        <span class="kw">FOREIGN KEY</span> (<span class="col">supplier_id</span>) <span class="kw">REFERENCES</span> <span class="tbl">suppliers</span>(<span class="col">supplier_id</span>)
+);
+
+<span class="cmt">-- ── TABLE: stock ────────────────────────────────</span>
+<span class="kw">CREATE TABLE</span> <span class="tbl">stock</span> (
+    <span class="col">stock_id</span>       <span class="kw2">INT</span>          <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>,
+    <span class="col">product_id</span>     <span class="kw2">INT</span>          <span class="kw">NOT NULL</span>,
+    <span class="col">warehouse_loc</span>  <span class="kw2">VARCHAR</span>(<span class="num">80</span>),
+    <span class="col">quantity</span>       <span class="kw2">INT</span>          <span class="kw">NOT NULL DEFAULT</span> <span class="num">0</span>,
+    <span class="kw">CONSTRAINT</span> <span class="fn">fk_stock_product</span>
+        <span class="kw">FOREIGN KEY</span> (<span class="col">product_id</span>) <span class="kw">REFERENCES</span> <span class="tbl">products</span>(<span class="col">product_id</span>)
+        <span class="kw">ON DELETE CASCADE</span>
+);`,
+
+join: `<span class="cmt">-- ── JOIN: products ⟕ suppliers ⟕ stock ─────────</span>
+<span class="kw">SELECT</span>
+    <span class="col">p.product_name</span>,
+    <span class="col">p.sku</span>,
+    <span class="col">p.category</span>,
+    <span class="col">s.supplier_name</span>,
+    <span class="col">s.email</span>   <span class="kw">AS</span> <span class="col">supplier_email</span>,
+    <span class="col">st.quantity</span>,
+    <span class="col">st.warehouse_loc</span>,
+    <span class="kw">CASE</span>
+        <span class="kw">WHEN</span> <span class="col">st.quantity</span> = <span class="num">0</span>
+            <span class="kw">THEN</span> <span class="str">'OUT_OF_STOCK'</span>
+        <span class="kw">WHEN</span> <span class="col">st.quantity</span> &lt;= <span class="col">p.reorder_level</span>
+            <span class="kw">THEN</span> <span class="str">'LOW_STOCK'</span>
+        <span class="kw">ELSE</span> <span class="str">'IN_STOCK'</span>
+    <span class="kw">END AS</span> <span class="col">stock_status</span>
+<span class="kw">FROM</span>      <span class="tbl">products</span>   <span class="col">p</span>
+<span class="kw">JOIN</span>      <span class="tbl">suppliers</span>  <span class="col">s</span>   <span class="kw">ON</span> <span class="col">p.supplier_id</span>  = <span class="col">s.supplier_id</span>
+<span class="kw">LEFT JOIN</span> <span class="tbl">stock</span>      <span class="col">st</span>  <span class="kw">ON</span> <span class="col">p.product_id</span>   = <span class="col">st.product_id</span>
+<span class="kw">ORDER BY</span>  <span class="col">stock_status</span>, <span class="col">p.product_name</span>;`,
+
+view: `<span class="cmt">-- ── VIEW: vw_low_stock ──────────────────────────</span>
+<span class="kw">CREATE OR REPLACE VIEW</span> <span class="tbl">vw_low_stock</span> <span class="kw">AS</span>
+    <span class="kw">SELECT</span>
+        <span class="col">p.product_id</span>,
+        <span class="col">p.product_name</span>,
+        <span class="col">p.sku</span>,
+        <span class="col">p.reorder_level</span>,
+        <span class="fn">COALESCE</span>(<span class="col">st.quantity</span>, <span class="num">0</span>)              <span class="kw">AS</span> <span class="col">current_stock</span>,
+        <span class="col">p.reorder_level</span> - <span class="fn">COALESCE</span>(<span class="col">st.quantity</span>,<span class="num">0</span>)
+                                                <span class="kw">AS</span> <span class="col">units_needed</span>,
+        <span class="col">s.supplier_name</span>,
+        <span class="col">s.email</span>                               <span class="kw">AS</span> <span class="col">supplier_email</span>,
+        <span class="kw">CASE</span>
+            <span class="kw">WHEN</span> <span class="fn">COALESCE</span>(<span class="col">st.quantity</span>,<span class="num">0</span>) = <span class="num">0</span>
+                <span class="kw">THEN</span> <span class="str">'OUT_OF_STOCK'</span>
+            <span class="kw">ELSE</span> <span class="str">'LOW_STOCK'</span>
+        <span class="kw">END</span>                                   <span class="kw">AS</span> <span class="col">alert_level</span>
+    <span class="kw">FROM</span>      <span class="tbl">products</span>   <span class="col">p</span>
+    <span class="kw">JOIN</span>      <span class="tbl">suppliers</span>  <span class="col">s</span>  <span class="kw">ON</span> <span class="col">p.supplier_id</span> = <span class="col">s.supplier_id</span>
+    <span class="kw">LEFT JOIN</span> <span class="tbl">stock</span>      <span class="col">st</span> <span class="kw">ON</span> <span class="col">p.product_id</span>  = <span class="col">st.product_id</span>
+    <span class="kw">WHERE</span> <span class="fn">COALESCE</span>(<span class="col">st.quantity</span>, <span class="num">0</span>) &lt;= <span class="col">p.reorder_level</span>
+      <span class="kw">AND</span> <span class="col">p.is_active</span> = <span class="kw">TRUE</span>
+    <span class="kw">ORDER BY</span> <span class="col">alert_level</span> <span class="kw">DESC</span>, <span class="col">units_needed</span> <span class="kw">DESC</span>;
+
+<span class="cmt">-- Usage:</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="tbl">vw_low_stock</span>;`,
+
+trigger: `<span class="cmt">-- ── TRIGGER: After stock UPDATE ─────────────────</span>
+<span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE TRIGGER</span> <span class="fn">trg_stock_after_update</span>
+<span class="kw">AFTER UPDATE ON</span> <span class="tbl">stock</span>
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> <span class="col">v_reorder</span> <span class="kw2">INT</span>;
+    <span class="kw">SELECT</span> <span class="col">reorder_level</span> <span class="kw">INTO</span> <span class="col">v_reorder</span>
+    <span class="kw">FROM</span>   <span class="tbl">products</span> <span class="kw">WHERE</span> <span class="col">product_id</span> = <span class="kw">NEW</span>.<span class="col">product_id</span>;
+
+    <span class="cmt">-- Stock dropped to zero</span>
+    <span class="kw">IF</span> <span class="kw">NEW</span>.<span class="col">quantity</span> = <span class="num">0</span> <span class="kw">AND OLD</span>.<span class="col">quantity</span> &gt; <span class="num">0</span> <span class="kw">THEN</span>
+        <span class="kw">INSERT INTO</span> <span class="tbl">stock_alerts</span>
+            (<span class="col">product_id</span>, <span class="col">alert_type</span>, <span class="col">old_quantity</span>, <span class="col">new_quantity</span>, <span class="col">message</span>)
+        <span class="kw">VALUES</span>
+            (<span class="kw">NEW</span>.<span class="col">product_id</span>, <span class="str">'OUT_OF_STOCK'</span>,
+             <span class="kw">OLD</span>.<span class="col">quantity</span>, <span class="kw">NEW</span>.<span class="col">quantity</span>,
+             <span class="fn">CONCAT</span>(<span class="str">'URGENT: Product '</span>, <span class="kw">NEW</span>.<span class="col">product_id</span>, <span class="str">' OUT OF STOCK'</span>));
+
+    <span class="cmt">-- Stock crossed reorder threshold</span>
+    <span class="kw">ELSEIF NEW</span>.<span class="col">quantity</span> &lt;= <span class="col">v_reorder</span>
+        <span class="kw">AND OLD</span>.<span class="col">quantity</span> &gt; <span class="col">v_reorder</span> <span class="kw">THEN</span>
+        <span class="kw">INSERT INTO</span> <span class="tbl">stock_alerts</span>
+            (<span class="col">product_id</span>, <span class="col">alert_type</span>, <span class="col">old_quantity</span>, <span class="col">new_quantity</span>, <span class="col">message</span>)
+        <span class="kw">VALUES</span>
+            (<span class="kw">NEW</span>.<span class="col">product_id</span>, <span class="str">'LOW_STOCK'</span>,
+             <span class="kw">OLD</span>.<span class="col">quantity</span>, <span class="kw">NEW</span>.<span class="col">quantity</span>,
+             <span class="fn">CONCAT</span>(<span class="str">'WARNING: below reorder level '</span>, <span class="col">v_reorder</span>));
+
+    <span class="cmt">-- Restocked above threshold</span>
+    <span class="kw">ELSEIF NEW</span>.<span class="col">quantity</span> &gt; <span class="col">v_reorder</span>
+        <span class="kw">AND OLD</span>.<span class="col">quantity</span> &lt;= <span class="col">v_reorder</span> <span class="kw">THEN</span>
+        <span class="kw">INSERT INTO</span> <span class="tbl">stock_alerts</span>
+            (<span class="col">product_id</span>, <span class="col">alert_type</span>, <span class="col">old_quantity</span>, <span class="col">new_quantity</span>, <span class="col">message</span>)
+        <span class="kw">VALUES</span>
+            (<span class="kw">NEW</span>.<span class="col">product_id</span>, <span class="str">'RESTOCKED'</span>,
+             <span class="kw">OLD</span>.<span class="col">quantity</span>, <span class="kw">NEW</span>.<span class="col">quantity</span>,
+             <span class="fn">CONCAT</span>(<span class="str">'INFO: Restocked to '</span>, <span class="kw">NEW</span>.<span class="col">quantity</span>));
+    <span class="kw">END IF</span>;
+<span class="kw">END</span>$$
+<span class="kw">DELIMITER</span> ;`,
+};
+
+function showSqlTab(key, el) {
+  document.querySelectorAll('.sql-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  else document.querySelectorAll('.sql-tab')[0]?.classList.add('active');
+  document.getElementById('sqlDisplay').innerHTML = SQL_SNIPPETS[key];
+}
+
+function copySql() {
+  const text = document.getElementById('sqlDisplay').innerText;
+  navigator.clipboard.writeText(text).then(() => toast('SQL copied to clipboard', 'info'));
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+loadAll();
+</script>
+</body>
+</html>
