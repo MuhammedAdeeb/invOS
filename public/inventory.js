@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════
    API CONFIG — point this at your Node server
 ═══════════════════════════════════════════ */
-const API = window.location.origin + '/api';
+const API = "https://invos-ihj2.onrender.com/api";
 
 /* ═══════════════════════════════════════════
    IN-MEMORY CACHE  (populated from API)
