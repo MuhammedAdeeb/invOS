@@ -705,6 +705,9 @@ select.form-input option { background: var(--surface2); }
     <div class="nav-item" onclick="showPage('sql',this)">
       <span class="nav-icon">🗄️</span><span>SQL Schema</span>
     </div>
+    <div class="nav-item" onclick="showPage('database',this)">
+      <span class="nav-icon">💾</span><span>Database</span>
+    </div>
 
     <div class="sidebar-footer">
       <div class="db-status"><div class="db-dot"></div>localStorage</div>
@@ -940,6 +943,84 @@ select.form-input option { background: var(--surface2); }
           <button class="btn btn-ghost btn-sm" onclick="copySql()">📋 Copy</button>
         </div>
         <div class="sql-code" id="sqlDisplay"></div>
+      </div>
+    </section>
+
+    <!-- ════ DATABASE VIEWER ════ -->
+    <section class="page-section" id="page-database">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Database <span>Viewer</span></div>
+          <div class="page-subtitle">Raw localStorage tables — live data</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-ghost btn-sm" onclick="renderDatabase()">⟳ Refresh</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportDbJson()">⬇ Export JSON</button>
+        </div>
+      </div>
+
+      <!-- suppliers table -->
+      <div class="table-card fade-up" style="margin-bottom:24px;">
+        <div class="table-header">
+          <div>
+            <div class="table-title">📋 suppliers</div>
+            <div class="table-meta" id="db-suppliers-meta">0 rows</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="db-suppliers-table">
+            <thead>
+              <tr>
+                <th>supplier_id</th><th>supplier_name</th><th>contact_person</th>
+                <th>email</th><th>phone</th><th>country</th><th>status</th><th>created_at</th>
+              </tr>
+            </thead>
+            <tbody id="db-suppliers-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- products table -->
+      <div class="table-card fade-up" style="margin-bottom:24px;">
+        <div class="table-header">
+          <div>
+            <div class="table-title">📦 products + stock</div>
+            <div class="table-meta" id="db-products-meta">0 rows</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="db-products-table">
+            <thead>
+              <tr>
+                <th>product_id</th><th>supplier_id</th><th>product_name</th><th>sku</th>
+                <th>category</th><th>description</th><th>unit_price</th><th>reorder_level</th>
+                <th>quantity</th><th>warehouse_loc</th><th>is_active</th><th>created_at</th>
+              </tr>
+            </thead>
+            <tbody id="db-products-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- alerts table -->
+      <div class="table-card fade-up">
+        <div class="table-header">
+          <div>
+            <div class="table-title">🔔 stock_alerts</div>
+            <div class="table-meta" id="db-alerts-meta">0 rows</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="db-alerts-table">
+            <thead>
+              <tr>
+                <th>alert_id</th><th>product_id</th><th>alert_type</th>
+                <th>old_quantity</th><th>new_quantity</th><th>message</th><th>created_at</th><th>is_read</th>
+              </tr>
+            </thead>
+            <tbody id="db-alerts-body"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -1436,6 +1517,7 @@ function showPage(name, el) {
   if (name === 'lowstock')  { renderLowStock(); }
   if (name === 'alerts')    { renderAlerts('alertListFull'); }
   if (name === 'sql')       { showSqlTab('tables'); }
+  if (name === 'database')  { renderDatabase(); }
 }
 
 /* ═══════════════════════════════════════════
@@ -1756,6 +1838,86 @@ function copySql() {
 /* ═══════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════ */
+/* ═══════════════════════════════════════════
+   DATABASE VIEWER
+═══════════════════════════════════════════ */
+function renderDatabase() {
+  // suppliers — actual fields: supplier_id, supplier_name, contact_person, email, phone, country, status
+  const supBody = document.getElementById('db-suppliers-body');
+  const supMeta = document.getElementById('db-suppliers-meta');
+  supBody.innerHTML = '';
+  supMeta.textContent = `${suppliers.length} row${suppliers.length !== 1 ? 's' : ''}`;
+  suppliers.forEach(s => {
+    const statusClass = s.status === 'active' ? 'badge-green' : 'badge-muted';
+    supBody.innerHTML += `<tr>
+      <td class="td-mono">${s.supplier_id ?? '—'}</td>
+      <td class="td-name">${s.supplier_name || '—'}</td>
+      <td>${s.contact_person || '—'}</td>
+      <td class="td-mono">${s.email || '—'}</td>
+      <td class="td-mono">${s.phone || '—'}</td>
+      <td>${s.country || '—'}</td>
+      <td><span class="badge ${statusClass}">${s.status || 'active'}</span></td>
+      <td class="td-mono">—</td>
+    </tr>`;
+  });
+  if (!suppliers.length) supBody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px;">No rows</td></tr>';
+
+  // products — actual fields: product_id, supplier_id, product_name, sku, category, description, unit_price, reorder_level, current_stock, warehouse_loc
+  const proBody = document.getElementById('db-products-body');
+  const proMeta = document.getElementById('db-products-meta');
+  proBody.innerHTML = '';
+  proMeta.textContent = `${products.length} row${products.length !== 1 ? 's' : ''}`;
+  products.forEach(p => {
+    const isActive = p.is_active !== false;
+    proBody.innerHTML += `<tr>
+      <td class="td-mono">${p.product_id ?? '—'}</td>
+      <td class="td-mono">${p.supplier_id ?? '—'}</td>
+      <td class="td-name">${p.product_name || '—'}</td>
+      <td class="td-mono">${p.sku || '—'}</td>
+      <td>${p.category || '—'}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.description || ''}">${p.description || '—'}</td>
+      <td class="td-mono">$${Number(p.unit_price || 0).toFixed(2)}</td>
+      <td class="td-mono">${p.reorder_level ?? '—'}</td>
+      <td class="td-mono">${p.current_stock ?? '—'}</td>
+      <td class="td-mono">${p.warehouse_loc || '—'}</td>
+      <td><span class="badge ${isActive ? 'badge-green' : 'badge-muted'}">${isActive ? 'true' : 'false'}</span></td>
+      <td class="td-mono">${p.last_restocked || '—'}</td>
+    </tr>`;
+  });
+  if (!products.length) proBody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:24px;">No rows</td></tr>';
+
+  // alerts — actual fields: alert_id, product_id, alert_type, old_quantity, new_quantity, message, triggered_at, is_read
+  const altBody = document.getElementById('db-alerts-body');
+  const altMeta = document.getElementById('db-alerts-meta');
+  altBody.innerHTML = '';
+  altMeta.textContent = `${alerts.length} row${alerts.length !== 1 ? 's' : ''}`;
+  alerts.forEach((a, i) => {
+    const typeClass = a.alert_type === 'OUT_OF_STOCK' ? 'badge-red' : a.alert_type === 'LOW_STOCK' ? 'badge-orange' : 'badge-green';
+    const ts = a.triggered_at ? new Date(a.triggered_at).toLocaleString() : '—';
+    altBody.innerHTML += `<tr>
+      <td class="td-mono">${a.alert_id ?? i + 1}</td>
+      <td class="td-mono">${a.product_id ?? '—'}</td>
+      <td><span class="badge ${typeClass}">${a.alert_type || '—'}</span></td>
+      <td class="td-mono">${a.old_quantity ?? '—'}</td>
+      <td class="td-mono">${a.new_quantity ?? '—'}</td>
+      <td style="max-width:200px;font-size:11px;">${a.message || '—'}</td>
+      <td class="td-mono">${ts}</td>
+      <td><span class="badge ${a.is_read ? 'badge-muted' : 'badge-blue'}">${a.is_read ? 'true' : 'false'}</span></td>
+    </tr>`;
+  });
+  if (!alerts.length) altBody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px;">No rows</td></tr>';
+}
+
+function exportDbJson() {
+  const data = { suppliers, products, stock_alerts: alerts, exported_at: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'invoss_database.json';
+  a.click();
+  toast('Database exported as JSON', 'info');
+}
+
 loadAll();
 </script>
 </body>
